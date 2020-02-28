@@ -1,0 +1,37 @@
+"use strict";
+const userForm = new UserForm();
+userForm.loginFromCallback = data =>
+  ApiConnector.login(data, response => {
+    if (response.success) {
+      location.reload();
+    } else {
+      userForm.setLoginErrorMessage(response.data);
+    }
+});
+
+const userForm = new UserForm();
+userForm.loginFormCallback = data =>
+  ApiConnector.login(data, response => {
+    if (response.success) {
+      location.reload();
+    } else {
+      userForm.setLoginErrorMessage(response.data);
+    }
+  });
+
+
+userForm.registerFormCallback = data => {
+  ApiConnector.register(data, response => {
+    if (response.success) {
+      alert(response);
+    } else {
+      userForm.setRegisterErrorMessage(response.data);
+    }
+  });
+  //console.log(JSON.stringify(data));
+};
+
+userForm.loginFromCallback({
+  login: "ivan@demo.ru",
+  password: "demo"
+});
