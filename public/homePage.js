@@ -1,20 +1,24 @@
 const logOut = new LogoutButton();
-logOut.action = () => ApiConnector.logout(raid);
-
-function raid() {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = processResponse;
-
-    function processResponse(e) {
-        if (xhr.readyState === 4) {
-            location.reload();
-        } else {
-            console.log('Загружаем ...')
-        }
+logOut.action = () => ApiConnector.logout(response => {
+    if (response.success) {
+        location.reload();
     }
-    xhr.open('GET', 'employees.json', true);
-    xhr.send();
-}
+});
+
+// function raid() {
+//     var xhr = new XMLHttpRequest();
+//     xhr.onreadystatechange = processResponse;
+
+//     function processResponse(e) {
+//         if (xhr.readyState === 4) {
+//             location.reload();
+//         } else {
+//             console.log('Загружаем ...')
+//         }
+//     }
+//     xhr.open('GET', 'employees.json', true);
+//     xhr.send();
+// }
 
 ApiConnector.current(response => {
     if (response.success) {
@@ -22,8 +26,121 @@ ApiConnector.current(response => {
     }
 });
 
-// let profdat = {
-//      id: 2,
-//      login: `ivan@demo.ru`
-//  };
-// ProfileWidget.showProfile(profdat);
+const courseTable = new RatesBoard();
+
+ApiConnector.getStocks(response => {
+    if (response.success) {
+        courseTable.clearTable();
+        courseTable.fillTable(response.data);
+        setInterval(() => {
+            courseTable.clearTable();
+            courseTable.fillTable(response.data);
+        }, 60000);
+    }
+});
+
+function hardReset() {
+    setTimeout(() => window.location = window.location.href, 3000); //обновление страницы
+}
+
+const coinManager = new MoneyManager();
+
+coinManager.addMoneyCallback = ({
+    currency,
+    amount
+}) => {
+    ApiConnector.addMoney({
+            currency,
+            amount
+        },
+        response => {
+            if (response.success) {
+                hardReset();
+                coinManager.setMessage(response.success, `Успешное пополнеие на ${amount} в ${currency}`);
+            } else {
+                coinManager.setMessage(response.success, "Ошибка пополнения!");
+            }
+        }
+    );
+};
+
+coinManager.conversionMoneyCallback = ({
+    fromCurrency,
+    targetCurrency,
+    fromAmount
+}) => {
+    ApiConnector.convertMoney({
+        fromCurrency,
+        targetCurrency,
+        fromAmount
+    }, response => {
+        if (response.success) {
+            hardReset();
+            coinManager.setMessage(response.success, `Успешная конвертация из ${fromCurrency} в ${targetCurrency} на ${fromAmount}`);
+        } else {
+            coinManager.setMessage(response.success, "Ошибка конвертации!");
+        }
+    })
+}
+
+coinManager.sendMoneyCallback = ({
+    to,
+    currency,
+    amount
+}) => {
+    ApiConnector.transferMoney({
+        to,
+        currency,
+        amount
+    }, response => {
+        console.log(response);
+        if (response.success) {
+            //hardReset();
+            coinManager.setMessage(response.success, `Успешный перевод ${to} в ${currency} на ${amount}`);
+        } else {
+            coinManager.setMessage(response.success, response.data);
+        }
+    })
+}
+
+const adress = new FavoritesWidget();
+
+ApiConnector.getFavorites(response => {
+    if (response.success) {
+        adress.clearTable();
+        adress.fillTable(response.data);
+        coinManager.updateUsersList(response.data);
+    }
+});
+
+adress.addUserCallback = ({
+    id,
+    name
+}) => {
+    ApiConnector.addUserToFavorites({
+        id,
+        name
+    }, response => {
+        if (response.success) {
+            adress.clearTable();
+            adress.fillTable(response.data);
+            coinManager.updateUsersList(response.data);
+            adress.setMessage(response.success, `Успех`);
+        } else {
+            adress.setMessage(response.success, "Ошибка добавления пользователя!");
+        }
+    })
+}
+
+adress.removeUserCallback = id => {
+    ApiConnector.removeUserFromFavorites(id, response => {
+        if (response.success) {
+            adress.clearTable();
+            adress.fillTable(response.data);
+            coinManager.updateUsersList(response.data);
+            adress.setMessage(response.success, `Успех`);
+        } else {
+            adress.setMessage(response.success, "Ошибка!");
+        }
+    })
+}
