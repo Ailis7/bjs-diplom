@@ -12,7 +12,7 @@ userForm.loginFormCallback = data =>
 userForm.registerFormCallback = data => {
   ApiConnector.register(data, response => {
     if (response.success) {
-      alert(response);
+      location.reload();
     } else {
       userForm.setRegisterErrorMessage(response.data);
     }

@@ -1,9 +1,10 @@
 const logOut = new LogoutButton();
-logOut.action = () => ApiConnector.logout(response => {
-    if (response.success) {
-        location.reload();
-    }
-});
+logOut.action = () =>
+    ApiConnector.logout(response => {
+        if (response.success) {
+            location.reload();
+        }
+    });
 
 // function raid() {
 //     var xhr = new XMLHttpRequest();
@@ -19,12 +20,19 @@ logOut.action = () => ApiConnector.logout(response => {
 //     xhr.open('GET', 'employees.json', true);
 //     xhr.send();
 // }
-
-ApiConnector.current(response => {
-    if (response.success) {
-        ProfileWidget.showProfile(response.data);
-    }
-});
+function reset() {
+    ApiConnector.current(response => {
+        if (response.success) {
+            ProfileWidget.showProfile(response.data);
+        }
+    });
+    ApiConnector.current(response => {
+        if (response.success) {
+            ProfileWidget.showProfile(response.data);
+        }
+    });
+}
+reset();
 
 const courseTable = new RatesBoard();
 
@@ -39,9 +47,9 @@ ApiConnector.getStocks(response => {
     }
 });
 
-function hardReset() {
-    setTimeout(() => window.location = window.location.href, 3000); //обновление страницы
-}
+// function hardReset() {
+//   setTimeout(() => (window.location = window.location.href), 3000); //обновление страницы
+// }
 
 const coinManager = new MoneyManager();
 
@@ -55,10 +63,13 @@ coinManager.addMoneyCallback = ({
         },
         response => {
             if (response.success) {
-                hardReset();
-                coinManager.setMessage(response.success, `Успешное пополнеие на ${amount} в ${currency}`);
+                reset();
+                coinManager.setMessage(
+                    !response.success,
+                    `Успешное пополнеие на ${amount} в ${currency}`
+                );
             } else {
-                coinManager.setMessage(response.success, "Ошибка пополнения!");
+                coinManager.setMessage(!response.success, "Ошибка пополнения!");
             }
         }
     );
@@ -70,18 +81,23 @@ coinManager.conversionMoneyCallback = ({
     fromAmount
 }) => {
     ApiConnector.convertMoney({
-        fromCurrency,
-        targetCurrency,
-        fromAmount
-    }, response => {
-        if (response.success) {
-            hardReset();
-            coinManager.setMessage(response.success, `Успешная конвертация из ${fromCurrency} в ${targetCurrency} на ${fromAmount}`);
-        } else {
-            coinManager.setMessage(response.success, "Ошибка конвертации!");
+            fromCurrency,
+            targetCurrency,
+            fromAmount
+        },
+        response => {
+            if (response.success) {
+                reset();
+                coinManager.setMessage(
+                    response.success,
+                    `Успешная конвертация из ${fromCurrency} в ${targetCurrency} на ${fromAmount}`
+                );
+            } else {
+                coinManager.setMessage(response.success, "Ошибка конвертации!");
+            }
         }
-    })
-}
+    );
+};
 
 coinManager.sendMoneyCallback = ({
     to,
@@ -89,19 +105,23 @@ coinManager.sendMoneyCallback = ({
     amount
 }) => {
     ApiConnector.transferMoney({
-        to,
-        currency,
-        amount
-    }, response => {
-        console.log(response);
-        if (response.success) {
-            //hardReset();
-            coinManager.setMessage(response.success, `Успешный перевод ${to} в ${currency} на ${amount}`);
-        } else {
-            coinManager.setMessage(response.success, response.data);
+            to,
+            currency,
+            amount
+        },
+        response => {
+            console.log(response);
+            if (response.success) {
+                coinManager.setMessage(
+                    response.success,
+                    `Успешный перевод ${to}! Вы перевели ${amount} ${currency}`
+                );
+            } else {
+                coinManager.setMessage(!response.success, response.data);
+            }
         }
-    })
-}
+    );
+};
 
 const adress = new FavoritesWidget();
 
@@ -118,19 +138,22 @@ adress.addUserCallback = ({
     name
 }) => {
     ApiConnector.addUserToFavorites({
-        id,
-        name
-    }, response => {
-        if (response.success) {
-            adress.clearTable();
-            adress.fillTable(response.data);
-            coinManager.updateUsersList(response.data);
-            adress.setMessage(response.success, `Успех`);
-        } else {
-            adress.setMessage(response.success, "Ошибка добавления пользователя!");
+            id,
+            name
+        },
+        response => {
+            if (response.success) {
+                adress.clearTable();
+                adress.fillTable(response.data);
+                coinManager.updateUsersList(response.data);
+                //console.log(response.success);
+                adress.setMessage(!response.success, `Успех`);
+            } else {
+                adress.setMessage(response.success, "Ошибка добавления пользователя!");
+            }
         }
-    })
-}
+    );
+};
 
 adress.removeUserCallback = id => {
     ApiConnector.removeUserFromFavorites(id, response => {
@@ -138,9 +161,9 @@ adress.removeUserCallback = id => {
             adress.clearTable();
             adress.fillTable(response.data);
             coinManager.updateUsersList(response.data);
-            adress.setMessage(response.success, `Успех`);
+            adress.setMessage(!response.success, `Успех`);
         } else {
             adress.setMessage(response.success, "Ошибка!");
         }
-    })
-}
+    });
+};
