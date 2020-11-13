@@ -20,7 +20,7 @@ userForm.registerFormCallback = data => {
   //console.log(JSON.stringify(data));
 };
 
-// userForm.loginFromCallback({
-//   login: "ivan@demo.ru",
-//   password: "demo"
-// });
+userForm.loginFormCallback({
+  login: "ivan@demo.ru",
+  password: "demo"
+});
